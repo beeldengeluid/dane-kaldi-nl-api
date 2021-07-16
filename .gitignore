@@ -1,7 +1,10 @@
 .DS_Store
 settings.yaml
 mount
+!tests/mount
 venv
 *.pyc
 pid-cache
 log
+__pycache__
+.pytest_cache
