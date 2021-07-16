@@ -47,14 +47,14 @@ class ASR(object):
 	def process_asr_output(self, asset_id):
 		self.logger.debug('processing the output of {}'.format(asset_id))
 
-		if validate_asr_output(asset_id) == False:
+		if self.validate_asr_output(asset_id) == False:
 			return {'state': 500, 'message': 'error: ASR output did not yield a transcript file'}
 
 		#create a word.json file
-		create_word_json(asset_id, True)
+		self.create_word_json(asset_id, True)
 
 		#package the output
-		package_output(asset_id)
+		self.package_output(asset_id)
 
 		#package the features and json file, so it can be used for indexing or something else
 		return {'state': 200, 'message': 'Successfully processed {}'.format(asset_id), 'finished' : True}
@@ -62,13 +62,13 @@ class ASR(object):
 	#if there is no 1Best.ctm there is something wrong with the input file or Kaldi...
 	#TODO also check if the files and dir for package_output are there
 	def validate_asr_output(self, asset_id):
-		transcript_file = __get_transcript_file_path(asset_id)
+		transcript_file = self.__get_transcript_file_path(asset_id)
 		self.logger.debug('Checking if transcript exists'.format(transcript_file))
 		return os.path.isfile(transcript_file)
 
 	#packages the features and the human readable output (1Best.*)
 	def package_output(self, asset_id):
-		output_dir = get_output_dir(asset_id)
+		output_dir = self.get_output_dir(asset_id)
 		files_to_be_added = [
 			'/{0}/liumlog/*.seg'.format(output_dir),
 			'/{0}/1Best.*'.format(output_dir),
@@ -76,8 +76,8 @@ class ASR(object):
 		]
 
 		#also add the words json file if it was generated
-		if os.path.exists(__get_words_file_path(asset_id)):
-			files_to_be_added.append(__get_words_file_path(asset_id))
+		if os.path.exists(self.__get_words_file_path(asset_id)):
+			files_to_be_added.append(self.__get_words_file_path(asset_id))
 
 		tar_path = os.path.join(os.sep, output_dir, self.ASR_PACKAGE_NAME)
 		tar = tarfile.open(tar_path, "w:gz")
@@ -90,7 +90,7 @@ class ASR(object):
 		tar.close()
 
 	def create_word_json(self, asset_id, save_in_asr_output=False):
-		transcript = __get_transcript_file_path(asset_id)
+		transcript = self.__get_transcript_file_path(asset_id)
 		word_json = []
 		with open(transcript, encoding='utf-8', mode='r') as file:
 			for line in file.readlines():
@@ -106,7 +106,7 @@ class ASR(object):
 				word_json.append(json_entry)
 
 		if save_in_asr_output:
-			with open(__get_words_file_path(asset_id), 'w+') as outfile:
+			with open(self.__get_words_file_path(asset_id), 'w+') as outfile:
 				json.dump(word_json, outfile, indent=4)
 
 		self.logger.debug(json.dumps(word_json, indent=4, sort_keys=True))
@@ -116,7 +116,7 @@ class ASR(object):
 		return os.path.join(os.sep, self.ASR_OUTPUT_DIR, asset_id)
 
 	def __get_transcript_file_path(self, asset_id):
-		return os.path.join(os.sep, get_output_dir(asset_id), ASR_TRANSCRIPT_FILE)
+		return os.path.join(os.sep, self.get_output_dir(asset_id), ASR_TRANSCRIPT_FILE)
 
 	def __get_words_file_path(self, asset_id):
-		return os.path.join(os.sep, get_output_dir(asset_id), self.ASR_WORD_JSON_FILE)
+		return os.path.join(os.sep, self.get_output_dir(asset_id), self.ASR_WORD_JSON_FILE)

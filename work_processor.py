@@ -3,7 +3,7 @@ import ntpath
 import shutil
 import logging
 import json
-from time import sleep
+import time
 from asr import ASR
 from transcode import transcode_to_mp3
 from flask import current_app
@@ -40,7 +40,7 @@ class WorkProcessor(object):
 				'state': 404, 'message': 'No file found at file location {0}'.format(input_file_path)
 			})
 		else:
-			sleep(5)
+			time.sleep(5)
 			return self._resp_to_pid_file(pid, asynchronous, {
 				'state' : 200, 'message' : 'Succesfully ran ASR on {0}'.format(input_file_path)
 			})
@@ -84,7 +84,7 @@ class WorkProcessor(object):
 		try:
 			self.asr.run_asr(asr_input_path, asset_id)
 		except Exception as e:
-			return _resp_to_pid_file(pid, asynchronous, {
+			return self._resp_to_pid_file(pid, asynchronous, {
 				'state': 500,
 				'message': 'Something went wrong when encoding the file: {0}'.format(e)
 			})
