@@ -2,12 +2,10 @@ from flask import Flask
 from flask import render_template
 from flask import request, Response
 
+import yaml
 import os
 import json
-from config.settings import APP_HOST, APP_PORT, PID_CACHE_DIR, LOG_DIR, LOG_NAME, \
-	LOG_LEVEL_CONSOLE, LOG_LEVEL_FILE, DEBUG, \
-	BASE_FS_MOUNT_DIR, ASR_INPUT_DIR, ASR_OUTPUT_DIR
-from work_processor import process_input_file
+from work_processor import WorkProcessor
 from apis import api
 from logging_util import init_logger
 from pathlib import Path
@@ -19,10 +17,22 @@ Note: you can check support pretty well with https://editor.swagger.io/
 """
 
 app = Flask(__name__)
-app.config['DEBUG'] = DEBUG
+
+# read the settings.yaml
+with open("./config/settings.yaml", "r") as yamlfile:
+    config = yaml.load(yamlfile, Loader=yaml.FullLoader)
+    print("Read successful")
+print(config)
+
+app.config.update(config)
 
 #initiliaze the logger
-logger = init_logger(LOG_DIR, LOG_NAME, LOG_LEVEL_CONSOLE, LOG_LEVEL_FILE)
+logger = init_logger(
+	app.config['LOG_DIR'],
+	app.config['LOG_NAME'],
+	app.config['LOG_LEVEL_CONSOLE'],
+	app.config['LOG_LEVEL_FILE']
+)
 
 logger.info('Initializing process API')
 
@@ -34,24 +44,25 @@ api.init_app(
 
 """-------------------- INIT FUNCTIONS ------------------"""
 
-def validate_config():
+def validate_config(cfg):
 	valid_log_levels = ['NOTSET', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
-	if not LOG_LEVEL_CONSOLE  in valid_log_levels or not LOG_LEVEL_FILE in valid_log_levels:
+	if not cfg['LOG_LEVEL_CONSOLE']  in valid_log_levels or \
+		not cfg['LOG_LEVEL_FILE'] in valid_log_levels:
 		logger.error('Invalid log level specified in config')
 		return False
 	return True
 
-def init_cache_dir():
-	logger.info('Checking if the PID cache dir {0} exists'.format(os.path.realpath(PID_CACHE_DIR)))
-	if not os.path.exists(os.path.realpath(PID_CACHE_DIR)):
+def init_cache_dir(cfg):
+	logger.info('Checking if the PID cache dir {0} exists'.format(os.path.realpath(cfg['PID_CACHE_DIR'])))
+	if not os.path.exists(os.path.realpath(cfg['PID_CACHE_DIR'])):
 		logger.info('Path does not exist, creating new dir')
-		os.mkdir(os.path.realpath(PID_CACHE_DIR))
+		os.mkdir(os.path.realpath(cfg['PID_CACHE_DIR']))
 	else:
 		logger.info('PID cache dir already exists')
 
-def validate_data_dirs():
-	i_dir = Path(os.path.join(BASE_FS_MOUNT_DIR, ASR_INPUT_DIR))
-	o_dir = Path(os.path.join(BASE_FS_MOUNT_DIR, ASR_OUTPUT_DIR))
+def validate_data_dirs(cfg):
+	i_dir = Path(os.path.join(cfg['BASE_FS_MOUNT_DIR'], cfg['ASR_INPUT_DIR']))
+	o_dir = Path(os.path.join(cfg['BASE_FS_MOUNT_DIR'], cfg['ASR_OUTPUT_DIR']))
 
 	if not os.path.exists(i_dir.parent.absolute()):
 		logger.debug('{} does not exist. Make sure BASE_FS_MOUNT_DIR exists before retrying'.format(
@@ -75,15 +86,15 @@ def validate_data_dirs():
 	return True
 
 # validate the config
-if not validate_config():
+if not validate_config(app.config):
 	quit()
 
 # now specifically validate the configured data input & output dirs
-if  not validate_data_dirs():
+if  not validate_data_dirs(app.config):
 	quit()
 
 # make sure the cache dir for the PIDs exists
-init_cache_dir()
+init_cache_dir(app.config)
 
 
 """------------------------------------------------------------------------------
@@ -106,8 +117,9 @@ def home():
 @app.route('/process-debug', methods=['POST'])
 def debug():
 	input_file = request.form.get('input_file', None)
-	resp = process_input_file(os.path.join(os.sep, 'input-files', input_file))
+	wp = WorkProcessor(current_app.config)
+	resp = wp.process_input_file(os.path.join(os.sep, 'input-files', input_file))
 	return Response(json.dumps(resp), mimetype='application/json')
 
 if __name__ == '__main__':
-	app.run(host=APP_HOST, port=APP_PORT)
+	app.run(host=app.config['APP_HOST'], port=app.config['APP_PORT'])

@@ -1,10 +1,9 @@
 import threading
 import os
-from flask import request
+from flask import request, current_app
 from flask_restx import Namespace, Resource, fields
 import logging
-from config.settings import LOG_NAME, BASE_FS_MOUNT_DIR, ASR_INPUT_DIR
-from work_processor import process_input_file, run_simulation, poll_pid_status
+from work_processor import WorkProcessor
 from urllib.parse import quote
 
 api = Namespace('ASR Processing API', description='Process mp3 & wav into text')
@@ -15,12 +14,6 @@ _anyField = api.model('AnyField', {})
 processResponse = api.model('ProcessResponse', {
 	'status' : fields.String(description='whether the ', example="success"),
 })
-
-logger = logging.getLogger(LOG_NAME)
-"""
-TODO: I do not like the response format too much. Why make the status code part of the resonse object if HTTP supports
-status code natively...
-"""
 
 @api.route('/process/<string:pid>',	endpoint='process')
 @api.doc(params={
@@ -64,12 +57,13 @@ class ProcessEndpoint(Resource):
 
 	#fetch the status of the pid
 	def get(self, pid):
-		resp = poll_pid_status(pid)
+		wp = WorkProcessor(current_app.config)
+		resp = wp.poll_pid_status(pid)
 		return resp, resp['state'], {}
 
 		#process in a different thread, so the client immediately gets a response and can start polling progress via GET
 	def _process_async(self, pid, input_file, simulate=True):
-		logger.debug('starting ASR in different thread...')
+		print('starting ASR in different thread...')
 		t = threading.Thread(target=self._process, args=(
 			pid,
 			input_file,
@@ -87,12 +81,17 @@ class ProcessEndpoint(Resource):
 		}
 
 	def _process(self, pid, input_file, simulate=True, asynchronous=False):
-		logger.debug('running asr (input_file={}) for PID={}'.format(input_file, pid))
+		print('running asr (input_file={}) for PID={}'.format(input_file, pid))
+		wp = WorkProcessor(current_app.config)
 		if simulate:
-			resp = run_simulation(pid, self._to_actual_input_filename(input_file), asynchronous)
+			resp = wp.run_simulation(pid, self._to_actual_input_filename(input_file), asynchronous)
 		else:
-			resp = process_input_file(pid, self._to_actual_input_filename(input_file), asynchronous)
+			resp = wp.process_input_file(pid, self._to_actual_input_filename(input_file), asynchronous)
 		return resp
 
 	def _to_actual_input_filename(self, input_file):
-		return os.path.join(BASE_FS_MOUNT_DIR, ASR_INPUT_DIR, quote(input_file))
+		return os.path.join(
+			current_app.config['BASE_FS_MOUNT_DIR'],
+			current_app.config['ASR_INPUT_DIR'],
+			quote(input_file)
+		)
