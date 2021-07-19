@@ -6,7 +6,7 @@ import json
 import time
 from apis.APIResponse import APIResponse
 from asr import ASR
-from transcode import transcode_to_mp3
+import transcode
 from flask import current_app
 
 """
@@ -47,31 +47,20 @@ class WorkProcessor(object):
 		if not os.path.isfile(input_file_path):  # check if inputfile exists
 			return self._resp_to_pid_file(pid, asynchronous, APIResponse.FILE_NOT_FOUND)
 
+		# extract the asset_id, i.e. filename without the path, and the file extension
 		asset_id, extension = self._get_asset_info(input_file_path)
 
-		#first assume the file is a valid audio file and can be used to run the ASR
-		asr_input_path = input_file_path
-
-		#check if the input file is a valid audio file, if not: transcode it first
-		if not self._is_audio_file(extension):
-			if self._is_transcodable(extension):
-				asr_input_path = os.path.join(
-					os.sep,
-					os.path.dirname(input_file_path), #the dir the input file is in
-					asset_id + ".mp3" #same name as input file, but with mp3 extension
-				)
-				self.transcode_to_mp3(
-					input_file_path,
-					asr_input_path #the transcode output is the input for the ASR
-				)
-			else:
-				#accepted file formats are; mov,mp4,m4a,3gp,3g2,mj2
-				return self._resp_to_pid_file(pid, asynchronous, APIResponse.ASR_IPUT_UNACCEPTABLE)
+		# check if the file needs to be transcoded and possibly obtain a new asr_input_path
+		try:
+			asr_input_path = self._try_transcode(input_file_path, asset_id, extension)
+		except ValueError as e:
+			return self._resp_to_pid_file(pid, asynchronous, APIResponse[str(e)])
 
 		#run the ASR
 		try:
 			self.asr.run_asr(asr_input_path, asset_id)
 		except Exception as e:
+			print(e)
 			return self._resp_to_pid_file(pid, asynchronous, APIResponse.ASR_FAILED)
 
 		#finally process the ASR results and return the status message
@@ -87,6 +76,29 @@ class WorkProcessor(object):
 			return json.loads(status)
 		except Exception as e:
 			return APIResponse.PID_FILE_CORRUPTED.value
+
+	def _try_transcode(self, asr_input_path, asset_id, extension):
+		if not self._is_audio_file(extension):
+			if self._is_transcodable(extension):
+				transcoding_output_path = self._get_transcode_output_path(asr_input_path, asset_id)
+				try:
+					transcode.transcode_to_mp3(
+						asr_input_path,
+						transcoding_output_path #the transcode output is the input for the ASR
+					)
+				except Exception as e:
+					raise ValueError(APIResponse.TRANSCODE_FAILED.name)
+			else:
+				raise ValueError(APIResponse.ASR_INPUT_UNACCEPTABLE.name)
+			return transcoding_output_path
+		return asr_input_path
+
+	def _get_transcode_output_path(self, input_path, asset_id):
+		return os.path.join(
+			os.sep,
+			os.path.dirname(input_path), #the dir the input file is in
+			asset_id + ".mp3" #same name as input file, but with mp3 extension
+		)
 
 	def _get_asset_info(self, file_path):
 		#grab the file_name from the path
