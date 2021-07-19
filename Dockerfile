@@ -29,6 +29,9 @@ RUN sudo mkdir /src/pid-cache && sudo chmod -R 777 /src/pid-cache
 #make sure to set the KALDI_ROOT or kaldi_NL won't be able to locate it
 ENV KALDI_ROOT=/usr/local/opt/kaldi
 
+#make sure the DANE fs mount point exists
+RUN sudo mkdir /mnt/dane-fs
+
 WORKDIR /src
 
 #start the dane worker
