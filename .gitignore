@@ -5,6 +5,7 @@ mount
 venv
 *.pyc
 pid-cache
+!tests/pid-cache
 log
 __pycache__
 .pytest_cache

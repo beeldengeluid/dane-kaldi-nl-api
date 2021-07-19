@@ -54,8 +54,7 @@ def ckan_cache(load_json_file):
 def application_settings():
     app = Flask(__name__)
     app.config = load_config('../config/settings.yaml', app.config)
-    app.config['PID_CACHE_DIR'] = '../pid-cache'
-    app.config['BASE_FS_MOUNT_DIR'] = '../mount'
+    #app.config['BASE_FS_MOUNT_DIR'] = '../mount'
     return app.config
 
 

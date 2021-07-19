@@ -11,7 +11,7 @@ TEST_MOUNT_DIR = './mount'
 TEST_ASR_INPUT_DIR = 'input-files'
 TEST_ASR_OUTPUT_DIR = 'asr-output'
 
-DUMMY_PID = '12345'
+DUMMY_PID = 'unit_test_pid'
 DUMMY_ASSET_ID = 'test'
 DUMMY_FILE_PATH_MP3 = '{}/{}/{}.mp3'.format(TEST_MOUNT_DIR, TEST_ASR_INPUT_DIR, DUMMY_ASSET_ID)
 DUMMY_FILE_PATH_MP4 = '{}/{}/{}.mp4'.format(TEST_MOUNT_DIR, TEST_ASR_INPUT_DIR, DUMMY_ASSET_ID)
@@ -31,6 +31,7 @@ def test_run_simulation_200(application_settings):
         print(resp)
         assert 'state' in resp and 'message' in resp
         assert resp['state'] == 200
+        assert wp._pid_file_exists(DUMMY_PID) # make sure test/pid-cache/[DUMMY_PID] exists
         verify(time, times=1).sleep(5)
     finally:
         unstub()
@@ -168,6 +169,7 @@ def test_poll_pid_status_200(application_settings):
 
         resp = wp.poll_pid_status(DUMMY_PID)
         assert 'state' in resp and 'message' in resp
+        assert wp._pid_file_exists(DUMMY_PID) # make sure test/pid-cache/[DUMMY_PID] exists
     finally:
         unstub()
 
@@ -183,9 +185,9 @@ def test_poll_pid_status_404(application_settings, nonexistent_pid):
         unstub()
 
 @pytest.mark.parametrize('corrupt_json', [
-    ('{"state" : 200, "message" : "asfdasd}'), # missing a "
-    ("{'state' : 200, 'message' : 'asfdasd'"), # ' instead of "
-    ('adfasdfasdfadsf'), # just a random string
+    ('{"state" : 200, "message" : "success}'), # missing a "
+    ("{'state' : 200, 'message' : 'success'"), # ' instead of "
+    ('brush crackle fizzly'), # just a random string
     (uuid4()), # just a random number
 ])
 def test_poll_pid_status_500(application_settings, corrupt_json):
