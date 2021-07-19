@@ -4,6 +4,7 @@ import tarfile
 import glob
 import json
 import logging
+from apis.APIResponse import APIResponse
 
 """
 This module contains functions for running audio files through Kaldi_NL to generate a speech transcript.
@@ -48,7 +49,7 @@ class ASR(object):
 		self.logger.debug('processing the output of {}'.format(asset_id))
 
 		if self.validate_asr_output(asset_id) == False:
-			return {'state': 500, 'message': 'error: ASR output did not yield a transcript file'}
+			return APIResponse.ASR_OUTPUT_CORRUPT
 
 		#create a word.json file
 		self.create_word_json(asset_id, True)
@@ -57,7 +58,7 @@ class ASR(object):
 		self.package_output(asset_id)
 
 		#package the features and json file, so it can be used for indexing or something else
-		return {'state': 200, 'message': 'Successfully processed {}'.format(asset_id), 'finished' : True}
+		return APIResponse.ASR_SUCCESS
 
 	#if there is no 1Best.ctm there is something wrong with the input file or Kaldi...
 	#TODO also check if the files and dir for package_output are there

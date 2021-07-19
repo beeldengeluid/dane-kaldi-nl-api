@@ -2,8 +2,7 @@ import pytest
 from mockito import when, ARGS, KWARGS, unstub, verify
 from datetime import datetime
 import time
-from asr import ASR
-
+from apis.APIResponse import APIResponse
 from work_processor import WorkProcessor
 
 TEST_MOUNT_DIR = './mount'
@@ -56,11 +55,11 @@ def test_run_simulation_404(application_settings, nonexistent_file):
 
 """ ------------------- WorkProcessor.process_input_file ------------------- """
 
-def test_process_input_file_200(application_settings, o_asr_200):
+def test_process_input_file_200(application_settings):
     try:
         wp = WorkProcessor(application_settings)
         when(wp.asr).run_asr(DUMMY_FILE_PATH, DUMMY_ASSET_ID).thenReturn(None) # mock the run_asr call
-        when(wp.asr).process_asr_output(DUMMY_ASSET_ID).thenReturn(o_asr_200)
+        when(wp.asr).process_asr_output(DUMMY_ASSET_ID).thenReturn(APIResponse.ASR_SUCCESS)
 
         resp = wp.process_input_file(
             DUMMY_PID,
@@ -70,8 +69,30 @@ def test_process_input_file_200(application_settings, o_asr_200):
         print(resp)
         assert 'state' in resp and 'message' in resp and 'finished' in resp
         assert resp['state'] == 200
-        assert resp['message'].find(DUMMY_ASSET_ID) != -1
         verify(wp.asr, times=1).run_asr(DUMMY_FILE_PATH, DUMMY_ASSET_ID)
         verify(wp.asr, times=1).process_asr_output(DUMMY_ASSET_ID)
+    finally:
+        unstub()
+
+@pytest.mark.parametrize('nonexistent_file', [
+    ('FAKE.mp3'),
+    ('{}/{}/FAKE.mp3'.format(TEST_MOUNT_DIR, TEST_ASR_INPUT_DIR)),
+])
+def test_process_input_file_404(application_settings, nonexistent_file):
+    try:
+        wp = WorkProcessor(application_settings)
+        when(wp.asr).run_asr(DUMMY_FILE_PATH, DUMMY_ASSET_ID).thenReturn(None) # mock the run_asr call
+        when(wp.asr).process_asr_output(DUMMY_ASSET_ID).thenReturn(APIResponse.ASR_FAILED)
+
+        resp = wp.process_input_file(
+            DUMMY_PID,
+            nonexistent_file,
+            False # async
+        )
+        print(resp)
+        assert 'state' in resp and 'message' in resp
+        assert resp['state'] == 404
+        verify(wp.asr, times=0).run_asr(DUMMY_FILE_PATH, DUMMY_ASSET_ID)
+        verify(wp.asr, times=0).process_asr_output(DUMMY_ASSET_ID)
     finally:
         unstub()

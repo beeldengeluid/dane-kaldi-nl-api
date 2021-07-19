@@ -4,6 +4,7 @@ import shutil
 import logging
 import json
 import time
+from apis.APIResponse import APIResponse
 from asr import ASR
 from transcode import transcode_to_mp3
 from flask import current_app
@@ -32,34 +33,23 @@ class WorkProcessor(object):
 		self.logger.debug(input_file_path)
 
 		#first write to the PID that the process is busy, then sleep for 5 seconds to simulate ASR/transcoding
-		self._write_pid_file_json(pid, {
-			'state' : 200, 'message' : 'Simulation in progress'
-		})
+		self._write_pid_file_json(pid, APIResponse.SIMULATION_IN_PROGRESS.value)
 		if not os.path.isfile(input_file_path):  # check if inputfile exists
-			return self._resp_to_pid_file(pid, asynchronous, {
-				'state': 404, 'message': 'No file found at file location {0}'.format(input_file_path)
-			})
+			return self._resp_to_pid_file(pid, asynchronous, APIResponse.FILE_NOT_FOUND)
 		else:
 			time.sleep(5)
-			return self._resp_to_pid_file(pid, asynchronous, {
-				'state' : 200, 'message' : 'Succesfully ran ASR on {0}'.format(input_file_path)
-			})
+			return self._resp_to_pid_file(pid, asynchronous, APIResponse.ASR_SUCCESS)
 
 	#processes the input and keeps a PID file with status information in asynchronous mode
 	def process_input_file(self, pid, input_file_path, asynchronous=False):
 		self.logger.debug('processing {} for PID={}'.format(input_file_path, pid))
+
 		if not os.path.isfile(input_file_path):  # check if inputfile exists
-			return self._resp_to_pid_file(pid, asynchronous, {
-				'state': 404, 'message': 'No file found at file location {0}'.format(input_file_path)
-			})
+			return self._resp_to_pid_file(pid, asynchronous, APIResponse.FILE_NOT_FOUND)
 
-		#grab the file_name from the path
-		file_name = ntpath.basename(input_file_path)
+		asset_id, extension = self._get_asset_info(input_file_path)
 
-		#split up the file in asset_id (used for creating a subfolder in the output) and extension
-		asset_id, extension = os.path.splitext(file_name)
-
-		#first assume the file is a valid audio file
+		#first assume the file is a valid audio file and can be used to run the ASR
 		asr_input_path = input_file_path
 
 		#check if the input file is a valid audio file, if not: transcode it first
@@ -75,19 +65,14 @@ class WorkProcessor(object):
 					asr_input_path #the transcode output is the input for the ASR
 				)
 			else:
-				return self._resp_to_pid_file(pid, asynchronous, {
-					'state': 406,
-					'message': 'Not acceptable: accepted file formats are; mov,mp4,m4a,3gp,3g2,mj2'
-				})
+				#accepted file formats are; mov,mp4,m4a,3gp,3g2,mj2
+				return self._resp_to_pid_file(pid, asynchronous, APIResponse.ASR_IPUT_UNACCEPTABLE)
 
 		#run the ASR
 		try:
 			self.asr.run_asr(asr_input_path, asset_id)
 		except Exception as e:
-			return self._resp_to_pid_file(pid, asynchronous, {
-				'state': 500,
-				'message': 'Something went wrong when encoding the file: {0}'.format(e)
-			})
+			return self._resp_to_pid_file(pid, asynchronous, APIResponse.ASR_FAILED)
 
 		#finally process the ASR results and return the status message
 		return self._resp_to_pid_file(pid, asynchronous, self.asr.process_asr_output(asset_id))
@@ -95,13 +80,22 @@ class WorkProcessor(object):
 	def poll_pid_status(self, pid):
 		self.logger.debug('Getting status for pid {}'.format(pid))
 		if not self._pid_file_exists(pid):
-			return {'state' : 404, 'message' : 'Error: PID does not exist (anymore)'}
+			return APIResponse.PID_NOT_FOUND.value
 
 		status = self._read_pid_file(pid)
 		try:
 			return json.loads(status)
 		except Exception as e:
-			return {'state' : 500, 'message' : 'PID file was corrupted'}
+			return APIResponse.PID_FILE_CORRUPTED.value
+
+	def _get_asset_info(self, file_path):
+		#grab the file_name from the path
+		file_name = ntpath.basename(file_path)
+
+		#split up the file in asset_id (used for creating a subfolder in the output) and extension
+		asset_id, extension = os.path.splitext(file_name)
+
+		return asset_id, extension
 
 	def _is_audio_file(self, extension):
 		return extension in ['.mp3', '.wav']
@@ -124,11 +118,11 @@ class WorkProcessor(object):
 	"""-------------------------------------- PID FILE FUNCTIONS -----------------------------------------------"""
 
 	#writes the API response to the PID file, if the "ASR job" is running asynchronously
-	def _resp_to_pid_file(self, pid, asynchronous, resp):
-		self.logger.debug(resp)
+	def _resp_to_pid_file(self, pid: str, asynchronous: bool, resp: APIResponse):
+		self.logger.debug(resp.value)
 		if asynchronous:
-			self._write_pid_file_json(pid, resp)
-		return resp
+			self._write_pid_file_json(pid, resp.value)
+		return resp.value
 
 	def _get_pid_file_name(self, pid):
 		return '{}/{}'.format(self.config['PID_CACHE_DIR'], pid)
@@ -136,7 +130,7 @@ class WorkProcessor(object):
 	def _pid_file_exists(self, pid):
 		return os.path.exists(self._get_pid_file_name(pid))
 
-	def _write_pid_file_json(self, pid, json_data):
+	def _write_pid_file_json(self, pid: str, json_data: dict):
 		f  = open(self._get_pid_file_name(pid), 'w+')
 		f.write(json.dumps(json_data))
 		f.close()
