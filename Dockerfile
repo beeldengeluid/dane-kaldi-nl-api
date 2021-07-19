@@ -19,7 +19,7 @@ RUN sudo apt-get install -y \
     ffmpeg
 
 # add the Python code & install the required libs
-COPY ./ /src
+COPY . /src
 COPY requirements.txt /src/
 RUN pip3 install -r /src/requirements.txt
 
@@ -29,6 +29,8 @@ RUN sudo mkdir /src/pid-cache && sudo chmod -R 777 /src/pid-cache
 #make sure to set the KALDI_ROOT or kaldi_NL won't be able to locate it
 ENV KALDI_ROOT=/usr/local/opt/kaldi
 
+WORKDIR /src
+
 #start the dane worker
 #CMD ["python3","-u","/src/worker.py"]
-CMD ["python3","-u","/src/server.py"]
+CMD ["python3","-u","server.py"]
