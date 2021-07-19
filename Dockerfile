@@ -30,7 +30,7 @@ RUN sudo mkdir /src/pid-cache && sudo chmod -R 777 /src/pid-cache
 ENV KALDI_ROOT=/usr/local/opt/kaldi
 
 #make sure the DANE fs mount point exists
-RUN sudo mkdir /mnt/dane-fs
+RUN sudo mkdir /mnt/dane-fs && sudo chmod -R 777 /mnt/dane-fs
 
 WORKDIR /src
 
