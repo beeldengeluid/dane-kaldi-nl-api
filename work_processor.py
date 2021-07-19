@@ -79,17 +79,18 @@ class WorkProcessor(object):
 
 	def _try_transcode(self, asr_input_path, asset_id, extension):
 		if not self._is_audio_file(extension):
-			if self._is_transcodable(extension):
-				transcoding_output_path = self._get_transcode_output_path(asr_input_path, asset_id)
-				try:
-					transcode.transcode_to_mp3(
-						asr_input_path,
-						transcoding_output_path #the transcode output is the input for the ASR
-					)
-				except Exception as e:
-					raise ValueError(APIResponse.TRANSCODE_FAILED.name)
-			else:
+
+			if not self._is_transcodable(extension):
 				raise ValueError(APIResponse.ASR_INPUT_UNACCEPTABLE.name)
+
+			transcoding_output_path = self._get_transcode_output_path(asr_input_path, asset_id)
+			try:
+				transcode.transcode_to_mp3(
+					asr_input_path,
+					transcoding_output_path #the transcode output is the input for the ASR
+				)
+			except Exception as e:
+				raise ValueError(APIResponse.TRANSCODE_FAILED.name)
 			return transcoding_output_path
 		return asr_input_path
 

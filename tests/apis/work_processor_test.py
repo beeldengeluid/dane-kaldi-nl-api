@@ -4,6 +4,7 @@ from datetime import datetime
 import time
 from apis.APIResponse import APIResponse
 from work_processor import WorkProcessor
+from uuid import uuid4
 import transcode
 
 TEST_MOUNT_DIR = './mount'
@@ -156,5 +157,42 @@ def test_try_transcode_500(application_settings):
         except ValueError as e:
             assert APIResponse[str(e)] == APIResponse.TRANSCODE_FAILED
         verify(transcode, times=1).transcode_to_mp3(*ARGS)
+    finally:
+        unstub()
+
+""" ------------------- WorkProcessor.poll_pid_status ------------------- """
+
+def test_poll_pid_status_200(application_settings):
+    try:
+        wp = WorkProcessor(application_settings)
+
+        resp = wp.poll_pid_status(DUMMY_PID)
+        assert 'state' in resp and 'message' in resp
+    finally:
+        unstub()
+
+@pytest.mark.parametrize('nonexistent_pid', [(uuid4()) for x in range(0,5)])
+def test_poll_pid_status_404(application_settings, nonexistent_pid):
+    try:
+        wp = WorkProcessor(application_settings)
+
+        resp = wp.poll_pid_status(nonexistent_pid)
+        assert 'state' in resp and 'message' in resp
+        assert resp == APIResponse.PID_NOT_FOUND.value
+    finally:
+        unstub()
+
+@pytest.mark.parametrize('corrupt_json', [
+    ('{"state" : 200, "message" : "asfdasd}'), # missing a "
+    ("{'state' : 200, 'message' : 'asfdasd'"), # ' instead of "
+    ('adfasdfasdfadsf'), # just a random string
+    (uuid4()), # just a random number
+])
+def test_poll_pid_status_500(application_settings, corrupt_json):
+    try:
+        wp = WorkProcessor(application_settings)
+        when(wp)._read_pid_file(DUMMY_PID).thenReturn(corrupt_json)
+        resp = wp.poll_pid_status(DUMMY_PID)
+        assert resp == APIResponse.PID_FILE_CORRUPTED.value
     finally:
         unstub()
