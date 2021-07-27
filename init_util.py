@@ -41,13 +41,13 @@ def validate_data_dirs(cfg, logger):
 
     #make sure the input and output dirs are there
     try:
-        os.mkdir(i_dir, 0o755)
+        os.makedirs(i_dir, 0o755)
         logger.debug('created ASR input dir: {}'.format(i_dir))
     except FileExistsError as e:
         logger.debug(e)
 
     try:
-        os.mkdir(o_dir, 0o755)
+        os.makedirs(o_dir, 0o755)
         logger.debug('created ASR output dir: {}'.format(o_dir))
     except FileExistsError as e:
         logger.debug(e)
