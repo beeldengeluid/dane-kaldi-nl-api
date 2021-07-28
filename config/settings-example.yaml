@@ -8,7 +8,7 @@ BASE_FS_MOUNT_DIR: '/mnt/dane-fs' #/.mount when running locally
 
 #asr module settings (asr.py)
 ASR_INPUT_DIR: 'input-files'
-ASR_OUTPUT_DIR: 'asr-output'
+ASR_OUTPUT_DIR: 'output-files/asr-output'
 ASR_PACKAGE_NAME: 'asr-features.tar.gz'
 ASR_WORD_JSON_FILE: 'words.json'
 
