@@ -9,3 +9,4 @@ pid-cache
 log
 __pycache__
 .pytest_cache
+Kaldi_NL.tar.gz
