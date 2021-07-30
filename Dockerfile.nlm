@@ -124,18 +124,20 @@ RUN apt-get install -y \
     ffmpeg
 
 # add the Python code & install the required libs
-COPY ./src /src
+COPY . /src
 COPY requirements.txt /src/
 RUN pip3 install -r /src/requirements.txt
 
-# create the input and output folders, which should match your local folders in [THIS REPO BASE]/mount/*
-# see start-container.sh how these folders are mounted on container creation
-RUN mkdir /input-files
-RUN mkdir /output-files
-RUN mkdir /asr-output
+RUN sudo mkdir /src/log && sudo chmod -R 777 /src/log
+RUN sudo mkdir /src/pid-cache && sudo chmod -R 777 /src/pid-cache
 
-#start the dane worker
-CMD ["python3","-u","/src/worker.py"]
+#make sure to set the KALDI_ROOT or kaldi_NL won't be able to locate it
+ENV KALDI_ROOT=/usr/local/opt/kaldi
 
-#start the debug service
-#CMD ["python3","-u","/src/server.py"]
+#make sure the DANE fs mount point exists
+RUN sudo mkdir /mnt/dane-fs && sudo chmod -R 777 /mnt/dane-fs
+
+WORKDIR /src
+
+#start the Kaldi API
+CMD ["python3","-u","server.py"]
