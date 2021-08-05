@@ -6,9 +6,12 @@ RUN lamachine-add kaldi_nl
 RUN lamachine-add oralhistory
 RUN lamachine-update
 
+#switch to root user and add the KALDI_ROOT to that user env as well
+USER root
+
 # intall ffmpeg, so the input video files will be transcoded to mp3
-RUN sudo apt-get update
-RUN sudo apt-get install -y \
+RUN apt-get update
+RUN apt-get install -y \
     ffmpeg
 
 # add the Python code & install the required libs
@@ -16,21 +19,16 @@ COPY . /src
 COPY requirements.txt /src/
 RUN pip3 install -r /src/requirements.txt
 
-RUN sudo mkdir /src/log && sudo chmod -R 777 /src/log
-RUN sudo mkdir /src/pid-cache && sudo chmod -R 777 /src/pid-cache
+RUN mkdir /src/log && chmod -R 777 /src/log
+RUN mkdir /src/pid-cache && chmod -R 777 /src/pid-cache
 
 #make sure to set the KALDI_ROOT or kaldi_NL won't be able to locate it
 ENV KALDI_ROOT=/usr/local/opt/kaldi
 
 #make sure the DANE fs mount point exists
-RUN sudo mkdir /mnt/dane-fs && sudo chmod -R 777 /mnt/dane-fs
+RUN mkdir /mnt/dane-fs && chmod -R 777 /mnt/dane-fs
 
 WORKDIR /src
-
-#switch to root user and add the KALDI_ROOT to that user env as well
-USER root
-
-ENV KALDI_ROOT=/usr/local/opt/kaldi
 
 #start the Kaldi API
 CMD ["python3","-u","server.py"]
