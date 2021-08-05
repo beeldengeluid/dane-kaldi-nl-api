@@ -22,7 +22,7 @@ class ASR(object):
 	def __init__(self, config):
 		self.KALDI_NL_DIR = config['KALDI_NL_DIR']
 		self.KALDI_NL_DECODER = config['KALDI_NL_DECODER']
-		self.ASR_OUTPUT_DIR = config['ASR_OUTPUT_DIR']
+		self.ASR_OUTPUT_DIR = os.path.join(config['BASE_FS_MOUNT_DIR'], config['ASR_OUTPUT_DIR'])
 		self.ASR_WORD_JSON_FILE = config['ASR_WORD_JSON_FILE']
 		self.ASR_PACKAGE_NAME = config['ASR_PACKAGE_NAME']
 
