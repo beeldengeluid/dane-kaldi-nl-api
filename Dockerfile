@@ -27,5 +27,10 @@ RUN sudo mkdir /mnt/dane-fs && sudo chmod -R 777 /mnt/dane-fs
 
 WORKDIR /src
 
+#switch to root user and add the KALDI_ROOT to that user env as well
+USER root
+
+ENV KALDI_ROOT=/usr/local/opt/kaldi
+
 #start the Kaldi API
 CMD ["python3","-u","server.py"]
