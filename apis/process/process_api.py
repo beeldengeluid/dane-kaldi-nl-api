@@ -93,5 +93,5 @@ class ProcessEndpoint(Resource):
 		return os.path.join(
 			current_app.config['BASE_FS_MOUNT_DIR'],
 			current_app.config['ASR_INPUT_DIR'],
-			quote(input_file)
+			input_file #quote(input_file)
 		)

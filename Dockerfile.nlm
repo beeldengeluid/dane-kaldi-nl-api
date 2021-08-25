@@ -115,6 +115,7 @@ RUN cd /opt/kaldi-gstreamer-server && \
     tar -xvzf mod.tar.gz && rm mod.tar.gz
 
 # extract the prebuilt Kaldi_NL.tar.gz, figure out how this can be generated
+# mount this into the container, rather than adding it to the image!
 COPY Kaldi_NL.tar.gz /opt/
 RUN  cd /opt && tar -xvzf Kaldi_NL.tar.gz && rm Kaldi_NL.tar.gz && \
      cd /opt/Kaldi_NL && ln -s /opt/kaldi/egs/wsj/s5/utils utils && ln -s /opt/kaldi/egs/wsj/s5/steps steps

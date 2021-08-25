@@ -6,7 +6,7 @@ RUN lamachine-add kaldi_nl
 RUN lamachine-add oralhistory
 RUN lamachine-update
 
-#switch to root user and add the KALDI_ROOT to that user env as well
+#switch to root user, to be able to write to the k8s mount, which is root user by default
 USER root
 
 # intall ffmpeg, so the input video files will be transcoded to mp3
