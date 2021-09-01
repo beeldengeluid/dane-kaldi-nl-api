@@ -5,6 +5,7 @@ from flask_restx import Namespace, Resource, fields
 import logging
 from work_processor import WorkProcessor
 from urllib.parse import quote
+from requests.utils import requote_uri
 
 api = Namespace('ASR Processing API', description='Process mp3 & wav into text')
 
@@ -93,5 +94,5 @@ class ProcessEndpoint(Resource):
 		return os.path.join(
 			current_app.config['BASE_FS_MOUNT_DIR'],
 			current_app.config['ASR_INPUT_DIR'],
-			input_file #quote(input_file)
+			requote_uri(input_file) # use the same quoting function as the DANE.Document.url
 		)
