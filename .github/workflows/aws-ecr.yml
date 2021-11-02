@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - "main"
+      - "disabled-this-until-we-are-ready"
 
 name: Deploy to Amazon ECR
 
