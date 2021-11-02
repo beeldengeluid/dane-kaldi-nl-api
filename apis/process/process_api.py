@@ -62,7 +62,7 @@ class ProcessEndpoint(Resource):
 		resp = wp.poll_pid_status(pid)
 		return resp, resp['state'], {}
 
-		#process in a different thread, so the client immediately gets a response and can start polling progress via GET
+	#process in a different thread, so the client immediately gets a response and can start polling progress via GET
 	def _process_async(self, pid, input_file, simulate=True):
 		print('starting ASR in different thread...')
 		t = threading.Thread(target=self._process, args=(

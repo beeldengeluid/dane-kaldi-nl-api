@@ -31,7 +31,7 @@ class ASR(object):
 	#runs the asr on the input path and puts the results in the ASR_OUTPUT_DIR dir
 	def run_asr(self, input_path, asset_id):
 		self.logger.debug("Starting ASR")
-		cmd = "cd {0}; ./{1} {2} {3}/{4}".format( #relying on sudo for the mount
+		cmd = 'cd {}; ./{} "{}" "{}/{}"'.format( #relying on sudo for the mount
 			self.KALDI_NL_DIR,
 			self.KALDI_NL_DECODER,
 			input_path,
