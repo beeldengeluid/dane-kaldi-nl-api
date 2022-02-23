@@ -2,7 +2,7 @@ from flask import Flask
 from flask import Response
 
 from apis import api
-from init_util import load_config, init_logger, validate_config, validate_data_dirs, init_cache_dir
+from base_util import load_config, init_logger, validate_config, validate_data_dirs, init_cache_dir, check_language_models
 
 app = Flask(__name__)
 
@@ -25,6 +25,9 @@ if not validate_config(app.config, logger):
 # now specifically validate the configured data input & output dirs
 if  not validate_data_dirs(app.config, logger):
     quit()
+
+# make sure the language models are downloaded
+check_language_models()
 
 # make sure the cache dir for the PIDs exists
 init_cache_dir(app.config, logger)

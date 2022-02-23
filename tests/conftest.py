@@ -2,7 +2,7 @@ from flask import Flask
 import json
 import os
 import pytest
-from init_util import load_config
+from base_util import load_config
 
 """
 Basic fixtures that are useful for most of the test modules

@@ -1,5 +1,6 @@
 import logging
 import os
+import subprocess
 import yaml
 from pathlib import Path
 
@@ -53,6 +54,15 @@ def validate_data_dirs(cfg, logger):
         logger.debug(e)
 
     return True
+
+def check_language_models(cfg, logger):
+    logger.debug("Checking availability of language models; will download if absent")
+    fetch_cmd = os.path.join(cfg['KALDI_NL_DIR'], cfg['KALDI_NL_MODEL_FETCHER'])
+    logger.debug(fetch_cmd)
+    process = subprocess.Popen(fetch_cmd, stdout=subprocess.PIPE, shell=True)
+    stdout = process.communicate()[0] # wait until finished. Remove stdout stuff if letting run in background and continue.
+    if stdout == '0':
+        self.logger.info("models were already downloaded")
 
 def init_logger(log_dir, log_name, log_level_console, log_level_file):
     logger = logging.getLogger(log_name)

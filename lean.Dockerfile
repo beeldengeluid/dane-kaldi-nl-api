@@ -21,8 +21,9 @@ COPY . /src
 RUN mkdir /src/log && chmod -R 777 /src/log
 RUN mkdir /src/pid-cache && chmod -R 777 /src/pid-cache
 
-#make sure the DANE fs mount point exists
+#make sure the DANE fs mount point exists (Note: not needed if lean-kaldi MODELPATH=/mnt/dane-fs/models)
 RUN mkdir /mnt/dane-fs && chmod -R 777 /mnt/dane-fs
+RUN mkdir /mnt/dane-fs/models && chmod -R 777 /mnt/dane-fs/models
 
 COPY Pipfile Pipfile.lock /src/
 
@@ -30,11 +31,6 @@ WORKDIR /src
 
 RUN pip install pipenv
 RUN pipenv sync --system
-
-# nodig omdat lean-kaldi /entrypoint.sh in deze dir wil aanroepen (voor o.a. download modellen)
-# download de modellen
-#WORKDIR /opt/Kaldi_NL
-#CMD ["./entrypoint.sh"]
 
 WORKDIR /src
 
