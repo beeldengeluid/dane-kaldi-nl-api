@@ -7,7 +7,7 @@ import time
 from apis.APIResponse import APIResponse
 from asr import ASR
 import transcode
-from flask import current_app
+
 
 """
 This module contains all the specific processing functions for the DANE-asr-worker. The reason
@@ -78,7 +78,7 @@ class WorkProcessor(object):
         status = self._read_pid_file(pid)
         try:
             return json.loads(status)
-        except Exception as e:
+        except Exception:
             return APIResponse.PID_FILE_CORRUPTED.value
 
     def _try_transcode(self, asr_input_path, asset_id, extension):
@@ -95,7 +95,7 @@ class WorkProcessor(object):
                     asr_input_path,
                     transcoding_output_path,  # the transcode output is the input for the ASR
                 )
-            except Exception as e:
+            except Exception:
                 raise ValueError(APIResponse.TRANSCODE_FAILED.name)
             return transcoding_output_path
         return asr_input_path
@@ -157,7 +157,7 @@ class WorkProcessor(object):
     def _read_pid_file(self, pid):
         f = open(self._get_pid_file_name(pid), "r")
         txt = ""
-        for l in f.readlines():
-            txt += l
+        for line in f.readlines():
+            txt += line
         f.close()
         return txt

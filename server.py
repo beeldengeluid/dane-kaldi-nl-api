@@ -34,7 +34,7 @@ if not validate_data_dirs(app.config, logger):
     quit()
 
 # make sure the language models are downloaded
-# check_language_models()
+check_language_models()
 
 # make sure the cache dir for the PIDs exists
 init_cache_dir(app.config, logger)
@@ -47,6 +47,7 @@ api.init_app(
     title="Beeld en Geluid ASR container",
     description="Access the speech transcription service within this docker container",
 )
+
 
 # heartbeat check called by external "health monitor"
 @app.route("/ping")

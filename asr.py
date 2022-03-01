@@ -52,7 +52,7 @@ class ASR(object):
     def process_asr_output(self, asset_id):
         self.logger.debug("processing the output of {}".format(asset_id))
 
-        if self.validate_asr_output(asset_id) == False:
+        if self.validate_asr_output(asset_id) is False:
             return APIResponse.ASR_OUTPUT_CORRUPT
 
         # create a word.json file
@@ -68,7 +68,7 @@ class ASR(object):
     # TODO also check if the files and dir for package_output are there
     def validate_asr_output(self, asset_id):
         transcript_file = self.__get_transcript_file_path(asset_id)
-        self.logger.debug("Checking if transcript exists".format(transcript_file))
+        self.logger.debug(f"Checking if transcript exists: {transcript_file}")
         return os.path.isfile(transcript_file)
 
     # packages the features and the human readable output (1Best.*)

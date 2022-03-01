@@ -77,7 +77,7 @@ def check_language_models(cfg, logger):
         0
     ]  # wait until finished. Remove stdout stuff if letting run in background and continue.
     if stdout == "0":
-        self.logger.info("models were already downloaded")
+        logger.info("models were already downloaded")
 
 
 def init_logger(log_dir, log_name, log_level_console, log_level_file):

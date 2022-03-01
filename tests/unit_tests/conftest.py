@@ -56,7 +56,7 @@ def ckan_cache(load_json_file):
 @pytest.fixture(scope="session")
 def application_settings():
     app = Flask(__name__)
-    app.config = load_config("./config/settings-example.yaml", app.config)
+    app.config = load_config("./config/settings_example.yaml", app.config)
     return app.config
 
 

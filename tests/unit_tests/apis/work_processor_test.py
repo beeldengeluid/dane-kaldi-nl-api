@@ -1,6 +1,5 @@
 import pytest
-from mockito import when, ARGS, KWARGS, unstub, verify
-from datetime import datetime
+from mockito import when, ARGS, unstub, verify
 import time
 from apis.APIResponse import APIResponse
 from work_processor import WorkProcessor
@@ -143,7 +142,7 @@ def test_try_transcode_406(application_settings, asr_input_path, extension):
         wp = WorkProcessor(application_settings)
         when(transcode).transcode_to_mp3(*ARGS).thenReturn()
         try:
-            resp = wp._try_transcode(asr_input_path, "test", extension)
+            wp._try_transcode(asr_input_path, "test", extension)
         except ValueError as e:
             assert APIResponse[str(e)] == APIResponse.ASR_INPUT_UNACCEPTABLE
         verify(transcode, times=0).transcode_to_mp3(*ARGS)
@@ -156,7 +155,7 @@ def test_try_transcode_500(application_settings):
         wp = WorkProcessor(application_settings)
         when(transcode).transcode_to_mp3(*ARGS).thenRaise(Exception("error"))
         try:
-            resp = wp._try_transcode(DUMMY_FILE_PATH_MP4, "test", ".mp4")
+            wp._try_transcode(DUMMY_FILE_PATH_MP4, "test", ".mp4")
         except ValueError as e:
             assert APIResponse[str(e)] == APIResponse.TRANSCODE_FAILED
         verify(transcode, times=1).transcode_to_mp3(*ARGS)

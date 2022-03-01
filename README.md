@@ -20,7 +20,7 @@ docker build -t lean-kaldi-dane .
 
 ## Local install
 
-Make sure to create the central config file: `config/settings.yaml`. You can easily do this by copying the `config/settings-example.yaml` to `settings.yaml`
+Make sure to create the central config file: `config/settings.yaml`. You can easily do this by copying the `config/settings_example.yaml` to `settings.yaml`
 
 ```yaml
 DEBUG : bool = True

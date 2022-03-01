@@ -2,9 +2,7 @@ import threading
 import os
 from flask import request, current_app
 from flask_restx import Namespace, Resource, fields
-import logging
 from work_processor import WorkProcessor
-from urllib.parse import quote
 from requests.utils import requote_uri
 
 api = Namespace("ASR Processing API", description="Process mp3 & wav into text")
