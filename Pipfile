@@ -6,6 +6,8 @@ verify_ssl = true
 [dev-packages]
 pytest = "*"
 mockito = "*"
+flake8 = "*"
+pytest-cov = "*"
 
 [packages]
 flask-restx = "*"

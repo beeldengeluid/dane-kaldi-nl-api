@@ -1,12 +1,12 @@
 .DS_Store
 settings.yaml
 mount
-!tests/mount
-venv
+!tests/unit_tests/mount
 *.pyc
 pid-cache
-!tests/pid-cache
+!tests/unit_tests/pid-cache
 log
 __pycache__
 .pytest_cache
 Kaldi_NL.tar.gz
+.coverage

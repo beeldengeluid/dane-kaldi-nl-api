@@ -8,7 +8,7 @@ This API is currently built on top of Kaldi_NL and supports both synchronous and
 For the oral history decoder to be available, make sure to build in the following way:
 
 ```bash
-docker build -t lean-kaldi --build-arg MODELPATH=/mnt/dane-fs/models --build-arg MODELS="utwente radboud_OH" .
+docker build -t lean-kaldi --build-arg MODELPATH=/models --build-arg MODELS="utwente radboud_OH" .
 ```
 
 

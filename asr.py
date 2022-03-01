@@ -6,6 +6,7 @@ import json
 import logging
 from apis.APIResponse import APIResponse
 
+
 """
 This module contains functions for running audio files through Kaldi_NL to generate a speech transcript.
 
@@ -15,109 +16,111 @@ Moreover this module has functions for:
 - packaging the ASR output (as a tar)
 
 """
-ASR_TRANSCRIPT_FILE = '1Best.ctm'
+ASR_TRANSCRIPT_FILE = "1Best.ctm"
+
 
 class ASR(object):
+    def __init__(self, config):
+        self.KALDI_NL_DIR = config["KALDI_NL_DIR"]
+        self.KALDI_NL_DECODER = config["KALDI_NL_DECODER"]
+        self.ASR_OUTPUT_DIR = os.path.join(
+            config["BASE_FS_MOUNT_DIR"], config["ASR_OUTPUT_DIR"]
+        )
+        self.ASR_WORD_JSON_FILE = config["ASR_WORD_JSON_FILE"]
+        self.ASR_PACKAGE_NAME = config["ASR_PACKAGE_NAME"]
 
-	def __init__(self, config):
-		self.KALDI_NL_DIR = config['KALDI_NL_DIR']
-		self.KALDI_NL_DECODER = config['KALDI_NL_DECODER']
-		self.ASR_OUTPUT_DIR = os.path.join(config['BASE_FS_MOUNT_DIR'], config['ASR_OUTPUT_DIR'])
-		self.ASR_WORD_JSON_FILE = config['ASR_WORD_JSON_FILE']
-		self.ASR_PACKAGE_NAME = config['ASR_PACKAGE_NAME']
+        self.logger = logging.getLogger(config["LOG_NAME"])
 
-		self.logger = logging.getLogger(config['LOG_NAME'])
+    # runs the asr on the input path and puts the results in the ASR_OUTPUT_DIR dir
+    def run_asr(self, input_path, asset_id):
+        self.logger.debug("Starting ASR")
+        cmd = 'cd {}; ./{} "{}" "{}/{}"'.format(  # relying on sudo for the mount
+            self.KALDI_NL_DIR,
+            self.KALDI_NL_DECODER,
+            input_path,
+            self.ASR_OUTPUT_DIR,
+            asset_id,
+        )
+        self.logger.debug(cmd)
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+        stdout = process.communicate()[
+            0
+        ]  # wait until finished. Remove stdout stuff if letting run in background and continue.
+        self.logger.debug(stdout)
+        return stdout
 
-	#runs the asr on the input path and puts the results in the ASR_OUTPUT_DIR dir
-	def run_asr(self, input_path, asset_id):
-		self.logger.debug("Starting ASR")
-		cmd = 'cd {}; ./{} "{}" "{}/{}"'.format( #relying on sudo for the mount
-			self.KALDI_NL_DIR,
-			self.KALDI_NL_DECODER,
-			input_path,
-			self.ASR_OUTPUT_DIR,
-			asset_id
-		)
-		self.logger.debug(cmd)
-		process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-		stdout = process.communicate()[0]  # wait until finished. Remove stdout stuff if letting run in background and continue.
-		self.logger.debug(stdout)
-		return stdout
+    def process_asr_output(self, asset_id):
+        self.logger.debug("processing the output of {}".format(asset_id))
 
+        if self.validate_asr_output(asset_id) == False:
+            return APIResponse.ASR_OUTPUT_CORRUPT
 
-	def process_asr_output(self, asset_id):
-		self.logger.debug('processing the output of {}'.format(asset_id))
+        # create a word.json file
+        self.create_word_json(asset_id, True)
 
-		if self.validate_asr_output(asset_id) == False:
-			return APIResponse.ASR_OUTPUT_CORRUPT
+        # package the output
+        self.package_output(asset_id)
 
-		#create a word.json file
-		self.create_word_json(asset_id, True)
+        # package the features and json file, so it can be used for indexing or something else
+        return APIResponse.ASR_SUCCESS
 
-		#package the output
-		self.package_output(asset_id)
+    # if there is no 1Best.ctm there is something wrong with the input file or Kaldi...
+    # TODO also check if the files and dir for package_output are there
+    def validate_asr_output(self, asset_id):
+        transcript_file = self.__get_transcript_file_path(asset_id)
+        self.logger.debug("Checking if transcript exists".format(transcript_file))
+        return os.path.isfile(transcript_file)
 
-		#package the features and json file, so it can be used for indexing or something else
-		return APIResponse.ASR_SUCCESS
+    # packages the features and the human readable output (1Best.*)
+    def package_output(self, asset_id):
+        output_dir = self.get_output_dir(asset_id)
+        files_to_be_added = [
+            "/{0}/liumlog/*.seg".format(output_dir),
+            "/{0}/1Best.*".format(output_dir),
+            "/{0}/intermediate/decode/*".format(output_dir),
+        ]
 
-	#if there is no 1Best.ctm there is something wrong with the input file or Kaldi...
-	#TODO also check if the files and dir for package_output are there
-	def validate_asr_output(self, asset_id):
-		transcript_file = self.__get_transcript_file_path(asset_id)
-		self.logger.debug('Checking if transcript exists'.format(transcript_file))
-		return os.path.isfile(transcript_file)
+        # also add the words json file if it was generated
+        if os.path.exists(self.__get_words_file_path(asset_id)):
+            files_to_be_added.append(self.__get_words_file_path(asset_id))
 
-	#packages the features and the human readable output (1Best.*)
-	def package_output(self, asset_id):
-		output_dir = self.get_output_dir(asset_id)
-		files_to_be_added = [
-			'/{0}/liumlog/*.seg'.format(output_dir),
-			'/{0}/1Best.*'.format(output_dir),
-			'/{0}/intermediate/decode/*'.format(output_dir)
-		]
+        tar_path = os.path.join(os.sep, output_dir, self.ASR_PACKAGE_NAME)
+        tar = tarfile.open(tar_path, "w:gz")
 
-		#also add the words json file if it was generated
-		if os.path.exists(self.__get_words_file_path(asset_id)):
-			files_to_be_added.append(self.__get_words_file_path(asset_id))
+        for pattern in files_to_be_added:
+            for file_path in glob.glob(pattern):
+                path, asset_id = os.path.split(file_path)
+                tar.add(file_path, arcname=asset_id)
 
-		tar_path = os.path.join(os.sep, output_dir, self.ASR_PACKAGE_NAME)
-		tar = tarfile.open(tar_path, "w:gz")
+        tar.close()
 
-		for pattern in files_to_be_added:
-			for file_path in glob.glob(pattern):
-				path, asset_id = os.path.split(file_path)
-				tar.add(file_path, arcname=asset_id)
+    def create_word_json(self, asset_id, save_in_asr_output=False):
+        transcript = self.__get_transcript_file_path(asset_id)
+        word_json = []
+        with open(transcript, encoding="utf-8", mode="r") as file:
+            for line in file.readlines():
+                self.logger.debug(line)
+                data = line.split(" ")
 
-		tar.close()
+                start_time = float(data[2]) * 1000  # in millisec
+                mark = data[4]
+                json_entry = {"start": start_time, "words": mark}
+                word_json.append(json_entry)
 
-	def create_word_json(self, asset_id, save_in_asr_output=False):
-		transcript = self.__get_transcript_file_path(asset_id)
-		word_json = []
-		with open(transcript, encoding='utf-8', mode='r') as file:
-			for line in file.readlines():
-				self.logger.debug(line)
-				data = line.split(' ')
+        if save_in_asr_output:
+            with open(self.__get_words_file_path(asset_id), "w+") as outfile:
+                json.dump(word_json, outfile, indent=4)
 
-				start_time = float(data[2]) * 1000  # in millisec
-				mark = data[4]
-				json_entry = {
-					"start": start_time,
-					"words": mark
-				}
-				word_json.append(json_entry)
+        self.logger.debug(json.dumps(word_json, indent=4, sort_keys=True))
+        return word_json
 
-		if save_in_asr_output:
-			with open(self.__get_words_file_path(asset_id), 'w+') as outfile:
-				json.dump(word_json, outfile, indent=4)
+    def get_output_dir(self, asset_id):
+        return os.path.join(os.sep, self.ASR_OUTPUT_DIR, asset_id)
 
-		self.logger.debug(json.dumps(word_json, indent=4, sort_keys=True))
-		return word_json
+    def __get_transcript_file_path(self, asset_id):
+        return os.path.join(os.sep, self.get_output_dir(asset_id), ASR_TRANSCRIPT_FILE)
 
-	def get_output_dir(self, asset_id):
-		return os.path.join(os.sep, self.ASR_OUTPUT_DIR, asset_id)
-
-	def __get_transcript_file_path(self, asset_id):
-		return os.path.join(os.sep, self.get_output_dir(asset_id), ASR_TRANSCRIPT_FILE)
-
-	def __get_words_file_path(self, asset_id):
-		return os.path.join(os.sep, self.get_output_dir(asset_id), self.ASR_WORD_JSON_FILE)
+    def __get_words_file_path(self, asset_id):
+        return os.path.join(
+            os.sep, self.get_output_dir(asset_id), self.ASR_WORD_JSON_FILE
+        )
