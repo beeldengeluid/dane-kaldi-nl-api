@@ -1,7 +1,8 @@
-FROM lean-kaldi
+# TODO add container to CLARIAH image registry
+FROM proycon/kaldi_nl:latest
 MAINTAINER Jaap Blom <jblom@beeldengeluid.nl>
 
-#switch to root user, to be able to write to the k8s mount, which is root user by default
+# switch to root user, to be able to write to the k8s mount, which is root user by default
 USER root
 
 # intall ffmpeg, so the input video files will be transcoded to mp3
@@ -21,7 +22,7 @@ COPY . /src
 RUN mkdir /src/log && chmod -R 777 /src/log
 RUN mkdir /src/pid-cache && chmod -R 777 /src/pid-cache
 
-#make sure the DANE fs mount point exists (Note: not needed if lean-kaldi MODELPATH=/mnt/dane-fs/models)
+# make sure the DANE fs mount point exists (Note: not needed if lean-kaldi MODELPATH=/mnt/dane-fs/models)
 RUN mkdir /mnt/dane-fs && chmod -R 777 /mnt/dane-fs
 RUN mkdir /mnt/dane-fs/models && chmod -R 777 /mnt/dane-fs/models
 
@@ -34,5 +35,5 @@ RUN pipenv sync --system
 
 WORKDIR /src
 
-#start the Kaldi API
+# start the Kaldi API
 ENTRYPOINT ["python", "/src/server.py"]

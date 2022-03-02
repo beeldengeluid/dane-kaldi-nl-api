@@ -75,9 +75,8 @@ def check_language_models(cfg, logger):
     process = subprocess.Popen(fetch_cmd, stdout=subprocess.PIPE, shell=True)
     stdout = process.communicate()[
         0
-    ]  # wait until finished. Remove stdout stuff if letting run in background and continue.
-    if stdout == "0":
-        logger.info("models were already downloaded")
+    ]  # wait until finished.
+    return process.returncode == 0  # means success
 
 
 def init_logger(log_dir, log_name, log_level_console, log_level_file):

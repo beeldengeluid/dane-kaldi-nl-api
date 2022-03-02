@@ -27,14 +27,18 @@ logger = init_logger(
 )
 
 if not validate_config(app.config, logger):
+    logger.error("settings.yaml was not valid, quitting...")
     quit()
 
 # now specifically validate the configured data input & output dirs
 if not validate_data_dirs(app.config, logger):
+    logger.error("configured data dirs not ok, quitting...")
     quit()
 
 # make sure the language models are downloaded
-check_language_models()
+if not check_language_models(app.config, logger)
+    logger.error("could not properly download required language models, quitting...")
+    quit()
 
 # make sure the cache dir for the PIDs exists
 init_cache_dir(app.config, logger)
