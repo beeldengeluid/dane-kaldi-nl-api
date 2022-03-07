@@ -70,9 +70,9 @@ def validate_data_dirs(cfg, logger):
 
 def check_language_models(cfg, logger):
     logger.debug("Checking availability of language models; will download if absent")
-    fetch_cmd = os.path.join(cfg["KALDI_NL_DIR"], cfg["KALDI_NL_MODEL_FETCHER"])
-    logger.debug(fetch_cmd)
-    process = subprocess.Popen(fetch_cmd, stdout=subprocess.PIPE, shell=True)
+    cmd = f"cd {cfg['KALDI_NL_DIR']} && ./{cfg['KALDI_NL_MODEL_FETCHER']}"
+    logger.debug(cmd)
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
     stdout = process.communicate()[
         0
     ]  # wait until finished.
