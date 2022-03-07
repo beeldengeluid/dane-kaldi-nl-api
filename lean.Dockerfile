@@ -1,5 +1,5 @@
 # TODO add container to CLARIAH image registry
-FROM proycon/kaldi_nl:latest
+FROM public.ecr.aws/a0x3r1t1/kaldi_nl
 MAINTAINER Jaap Blom <jblom@beeldengeluid.nl>
 
 # switch to root user, to be able to write to the k8s mount, which is root user by default
