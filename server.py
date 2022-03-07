@@ -36,7 +36,7 @@ if not validate_data_dirs(app.config, logger):
     quit()
 
 # make sure the language models are downloaded
-if not check_language_models(app.config, logger)
+if not check_language_models(app.config, logger):
     logger.error("could not properly download required language models, quitting...")
     quit()
 
