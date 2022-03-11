@@ -5,7 +5,7 @@ import glob
 import json
 import logging
 from api_util import APIResponse
-from base_util import run_shell_command
+import base_util
 
 """
 This module contains functions for running audio files through Kaldi_NL to generate a speech transcript.
@@ -42,7 +42,7 @@ class ASR(object):
             self.ASR_OUTPUT_DIR,
             asset_id,
         )
-        return run_shell_command(cmd, self.logger)
+        return base_util.run_shell_command(cmd, self.logger)
 
     def process_asr_output(self, asset_id):
         self.logger.debug("processing the output of {}".format(asset_id))

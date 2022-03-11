@@ -1,6 +1,6 @@
 import logging
 import os
-from base_util import run_shell_command
+import base_util
 
 
 """
@@ -14,11 +14,15 @@ class Transcoder(object):
     def transcode_to_mp3(self, path: str, asr_path: str) -> bool:
         self.logger.debug(f"Encoding file: {path}")
         cmd = "ffmpeg -i {0} {1}".format(path, asr_path)
-        return run_shell_command(cmd, self.logger)
+        return base_util.run_shell_command(cmd, self.logger)
 
-    def get_transcode_output_path(self, input_path: str, asset_id: str) -> str:
-        return os.path.join(
-            os.sep,
-            os.path.dirname(input_path),  # the dir the input file is in
-            asset_id + ".mp3",  # same name as input file, but with mp3 extension
-        )
+    def get_transcode_output_path(self, input_path: os.PathLike, asset_id: os.PathLike) -> str:
+        try:
+            return os.path.join(  # normalise all path elements to strings to avoid "Can't mix strings and bytes in path components"
+                os.sep,
+                f"{os.path.dirname(input_path)}",  # the dir the input file is in
+                f"{asset_id}.mp3",  # same name as input file, but with mp3 extension
+            )
+        except TypeError as e:
+            print(e)
+            return None

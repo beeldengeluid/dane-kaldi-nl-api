@@ -114,7 +114,7 @@ def test_process_input_file_404(application_settings, nonexistent_file):
 def test_try_transcode_200(application_settings):
     try:
         wp = WorkProcessor(application_settings)
-        when(wp.transcoder).transcode_to_mp3(*ARGS).thenReturn()
+        when(wp.transcoder).transcode_to_mp3(*ARGS).thenReturn(True)
         try:
             resp = wp._try_transcode(DUMMY_FILE_PATH_MP4, "test", ".mp4")
             assert resp == wp.transcoder.get_transcode_output_path(DUMMY_FILE_PATH_MP4, "test")
@@ -140,7 +140,7 @@ def test_try_transcode_200(application_settings):
 def test_try_transcode_406(application_settings, asr_input_path, extension):
     try:
         wp = WorkProcessor(application_settings)
-        when(wp.transcoder).transcode_to_mp3(*ARGS).thenReturn()
+        when(wp.transcoder).transcode_to_mp3(*ARGS).thenReturn(False)
         try:
             wp._try_transcode(asr_input_path, "test", extension)
         except ValueError as e:

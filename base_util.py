@@ -81,14 +81,14 @@ def check_language_models(cfg, logger):
 
 # used by asr.py and transcode.py
 def run_shell_command(cmd: str, logger) -> bool:
-    logger.debug(cmd)
+    logger.info(cmd)
     try:
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-        stdout = process.communicate()[
-            0
-        ]  # wait until finished.
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        stdout, stderr = process.communicate()
         logger.debug(stdout)
-        return True
+        logger.debug(stderr)
+        logger.debug(f"return code {process.returncode}" )
+        return process.returncode == 0
     except subprocess.CalledProcessError:
         logger.exception("CalledProcessError")
         return False
