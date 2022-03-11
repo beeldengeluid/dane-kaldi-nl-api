@@ -4,7 +4,7 @@ import time
 from api_util import APIResponse
 from work_processor import WorkProcessor
 from uuid import uuid4
-from transcode import Transcoder
+
 
 TEST_MOUNT_DIR = "./tests/unit_tests/mount"
 TEST_ASR_INPUT_DIR = "input-files"

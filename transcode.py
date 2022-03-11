@@ -6,6 +6,8 @@ import base_util
 """
 This class supplies the function for transcoding valid video files into mp3 format (i.e. valid input for Kaldi)
 """
+
+
 class Transcoder(object):
 
     def __init__(self, config):

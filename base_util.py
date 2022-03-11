@@ -71,12 +71,7 @@ def validate_data_dirs(cfg, logger):
 def check_language_models(cfg, logger):
     logger.debug("Checking availability of language models; will download if absent")
     cmd = f"cd {cfg['KALDI_NL_DIR']} && ./{cfg['KALDI_NL_MODEL_FETCHER']}"
-    logger.debug(cmd)
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-    stdout = process.communicate()[
-        0
-    ]  # wait until finished.
-    return process.returncode == 0  # means success
+    return run_shell_command(cmd, logger)
 
 
 # used by asr.py and transcode.py
@@ -87,7 +82,7 @@ def run_shell_command(cmd: str, logger) -> bool:
         stdout, stderr = process.communicate()
         logger.debug(stdout)
         logger.debug(stderr)
-        logger.debug(f"return code {process.returncode}" )
+        logger.debug(f"return code {process.returncode}")
         return process.returncode == 0
     except subprocess.CalledProcessError:
         logger.exception("CalledProcessError")
@@ -97,7 +92,7 @@ def run_shell_command(cmd: str, logger) -> bool:
         return False
 
 
-def init_logger(log_dir, log_name, log_level_console, log_level_file):
+def init_logger(log_dir: str, log_name: str, log_level_console: str, log_level_file: str) -> logging.Logger:
     logger = logging.getLogger(log_name)
     level_file = logging.getLevelName(log_level_file)
     level_console = logging.getLevelName(log_level_console)
