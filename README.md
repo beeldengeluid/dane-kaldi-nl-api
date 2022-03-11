@@ -46,7 +46,7 @@ To properly build the docker image for this repo (working with the Oral History 
 **Note**: at some point (this year 2022) we will provide prebuilt images (of different Kaldi_NL configurations) for the [CLARIAH](https://github.com/CLARIAH) organisation/project in an open registry. After that you can simply build the image with:
 
 ```bash
-docker build -t dane-kaldi-nl-api -f lean.Dockerfile .
+docker build -t dane-kaldi-nl-api -f Dockerfile .
 ```
 
 ### Kaldi and Kaldi_NL
@@ -73,7 +73,7 @@ docker push {docker-registry}/proycon/kaldi_nl:latest
 
 ### dane-kaldi-nl-api (this repo)
 
-If you have pushed the `proycon/kaldi_nl` image to your registry, you should update the `lean.Dockerfile`:
+If you have pushed the `proycon/kaldi_nl` image to your registry, you should update the `Dockerfile`:
 
 ```
 FROM proycon/kaldi_nl:latest
@@ -88,7 +88,7 @@ FROM {docker-registry}/proycon/kaldi_nl:latest
 Build the image with:
 
 ```bash
-docker build -t dane-kaldi-nl-api -f lean.Dockerfile .
+docker build -t dane-kaldi-nl-api -f Dockerfile .
 ```
 
 Now to push the image to your registry:

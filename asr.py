@@ -4,8 +4,8 @@ import tarfile
 import glob
 import json
 import logging
-from apis.APIResponse import APIResponse
-
+from api_util import APIResponse
+from base_util import run_shell_command
 
 """
 This module contains functions for running audio files through Kaldi_NL to generate a speech transcript.
@@ -20,6 +20,7 @@ ASR_TRANSCRIPT_FILE = "1Best.ctm"
 
 
 class ASR(object):
+
     def __init__(self, config):
         self.KALDI_NL_DIR = config["KALDI_NL_DIR"]
         self.KALDI_NL_DECODER = config["KALDI_NL_DECODER"]
@@ -34,20 +35,14 @@ class ASR(object):
     # runs the asr on the input path and puts the results in the ASR_OUTPUT_DIR dir
     def run_asr(self, input_path, asset_id):
         self.logger.debug("Starting ASR")
-        cmd = 'cd {}; ./{} "{}" "{}/{}"'.format(  # relying on sudo for the mount
+        cmd = 'cd {}; ./{} "{}" "{}/{}"'.format(
             self.KALDI_NL_DIR,
             self.KALDI_NL_DECODER,
             input_path,
             self.ASR_OUTPUT_DIR,
             asset_id,
         )
-        self.logger.debug(cmd)
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-        stdout = process.communicate()[
-            0
-        ]  # wait until finished. Remove stdout stuff if letting run in background and continue.
-        self.logger.debug(stdout)
-        return stdout
+        return run_shell_command(cmd, self.logger)
 
     def process_asr_output(self, asset_id):
         self.logger.debug("processing the output of {}".format(asset_id))

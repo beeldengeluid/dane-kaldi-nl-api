@@ -79,6 +79,24 @@ def check_language_models(cfg, logger):
     return process.returncode == 0  # means success
 
 
+# used by asr.py and transcode.py
+def run_shell_command(cmd: str, logger) -> bool:
+    logger.debug(cmd)
+    try:
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+        stdout = process.communicate()[
+            0
+        ]  # wait until finished.
+        logger.debug(stdout)
+        return True
+    except subprocess.CalledProcessError:
+        logger.exception("CalledProcessError")
+        return False
+    except Exception:
+        logger.exception("Exception")
+        return False
+
+
 def init_logger(log_dir, log_name, log_level_console, log_level_file):
     logger = logging.getLogger(log_name)
     level_file = logging.getLevelName(log_level_file)

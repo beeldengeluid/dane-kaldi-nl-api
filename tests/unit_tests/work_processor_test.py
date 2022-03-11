@@ -1,10 +1,10 @@
 import pytest
 from mockito import when, ARGS, unstub, verify
 import time
-from apis.APIResponse import APIResponse
+from api_util import APIResponse
 from work_processor import WorkProcessor
 from uuid import uuid4
-import transcode
+from transcode import Transcoder
 
 TEST_MOUNT_DIR = "./tests/unit_tests/mount"
 TEST_ASR_INPUT_DIR = "input-files"
@@ -114,13 +114,13 @@ def test_process_input_file_404(application_settings, nonexistent_file):
 def test_try_transcode_200(application_settings):
     try:
         wp = WorkProcessor(application_settings)
-        when(transcode).transcode_to_mp3(*ARGS).thenReturn()
+        when(wp.transcoder).transcode_to_mp3(*ARGS).thenReturn()
         try:
             resp = wp._try_transcode(DUMMY_FILE_PATH_MP4, "test", ".mp4")
-            assert resp == wp._get_transcode_output_path(DUMMY_FILE_PATH_MP4, "test")
+            assert resp == wp.transcoder.get_transcode_output_path(DUMMY_FILE_PATH_MP4, "test")
         except ValueError as e:
             print(e)
-        verify(transcode, times=1).transcode_to_mp3(*ARGS)
+        verify(wp.transcoder, times=1).transcode_to_mp3(*ARGS)
     finally:
         unstub()
 
@@ -140,12 +140,12 @@ def test_try_transcode_200(application_settings):
 def test_try_transcode_406(application_settings, asr_input_path, extension):
     try:
         wp = WorkProcessor(application_settings)
-        when(transcode).transcode_to_mp3(*ARGS).thenReturn()
+        when(wp.transcoder).transcode_to_mp3(*ARGS).thenReturn()
         try:
             wp._try_transcode(asr_input_path, "test", extension)
         except ValueError as e:
             assert APIResponse[str(e)] == APIResponse.ASR_INPUT_UNACCEPTABLE
-        verify(transcode, times=0).transcode_to_mp3(*ARGS)
+        verify(wp.transcoder, times=0).transcode_to_mp3(*ARGS)
     finally:
         unstub()
 
@@ -153,12 +153,12 @@ def test_try_transcode_406(application_settings, asr_input_path, extension):
 def test_try_transcode_500(application_settings):
     try:
         wp = WorkProcessor(application_settings)
-        when(transcode).transcode_to_mp3(*ARGS).thenRaise(Exception("error"))
+        when(wp.transcoder).transcode_to_mp3(*ARGS).thenReturn(False)
         try:
             wp._try_transcode(DUMMY_FILE_PATH_MP4, "test", ".mp4")
         except ValueError as e:
             assert APIResponse[str(e)] == APIResponse.TRANSCODE_FAILED
-        verify(transcode, times=1).transcode_to_mp3(*ARGS)
+        verify(wp.transcoder, times=1).transcode_to_mp3(*ARGS)
     finally:
         unstub()
 
