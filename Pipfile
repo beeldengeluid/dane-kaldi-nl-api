@@ -8,6 +8,7 @@ pytest = "*"
 mockito = "*"
 flake8 = "*"
 pytest-cov = "*"
+mypy = "*"
 
 [packages]
 flask-restx = "*"
@@ -15,4 +16,4 @@ PyYAML = "*"
 requests = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.10"
