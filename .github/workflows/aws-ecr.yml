@@ -11,8 +11,11 @@ on:
 name: Deploy to Amazon ECR
 
 jobs:
+  test-code-base:
+    uses: ./.github/workflows/test-code-base.yml
   deploy:
     name: Deploy
+    needs: [test-code-base]
     runs-on: ubuntu-latest
     environment: production
 

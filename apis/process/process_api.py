@@ -54,7 +54,9 @@ class ProcessEndpoint(Resource):
             if wait:
                 resp = self._process(current_app.config, pid, input_file, simulate)
             else:
-                resp = self._process_async(current_app.config, pid, input_file, simulate)
+                resp = self._process_async(
+                    current_app.config, pid, input_file, simulate
+                )
             return resp, resp["state"], {}
         else:
             return {"state": 400, "message": "error: bad params"}, 400, {}
@@ -72,7 +74,7 @@ class ProcessEndpoint(Resource):
         t = threading.Thread(
             target=self._process,
             args=(
-                config, 
+                config,
                 pid,
                 input_file,
                 simulate,

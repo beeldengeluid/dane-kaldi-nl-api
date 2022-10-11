@@ -4,9 +4,9 @@ import shutil
 import logging
 import json
 import time
-from apis.APIResponse import APIResponse
+from api_util import APIResponse
 from asr import ASR
-import transcode
+from transcode import Transcoder
 
 
 """
@@ -26,6 +26,7 @@ class WorkProcessor(object):
         self.config = config
         self.logger = logging.getLogger(config["LOG_NAME"])
         self.asr = ASR(config)
+        self.transcoder = Transcoder(self.config)
 
     # simulates running ASR and/or transcoding, so the API communication can be tested in isolation
     def run_simulation(self, pid, input_file_path, asynchronous=False):
@@ -87,25 +88,21 @@ class WorkProcessor(object):
             if not self._is_transcodable(extension):
                 raise ValueError(APIResponse.ASR_INPUT_UNACCEPTABLE.name)
 
-            transcoding_output_path = self._get_transcode_output_path(
+            transcoding_output_path = self.transcoder.get_transcode_output_path(
                 asr_input_path, asset_id
             )
-            try:
-                transcode.transcode_to_mp3(
-                    asr_input_path,
-                    transcoding_output_path,  # the transcode output is the input for the ASR
-                )
-            except Exception:
-                raise ValueError(APIResponse.TRANSCODE_FAILED.name)
-            return transcoding_output_path
-        return asr_input_path
 
-    def _get_transcode_output_path(self, input_path, asset_id):
-        return os.path.join(
-            os.sep,
-            os.path.dirname(input_path),  # the dir the input file is in
-            asset_id + ".mp3",  # same name as input file, but with mp3 extension
-        )
+            success = self.transcoder.transcode_to_mp3(
+                asr_input_path,
+                transcoding_output_path,
+            )
+            if success is False:
+                raise ValueError(APIResponse.TRANSCODE_FAILED.name)
+
+            return (
+                transcoding_output_path  # the transcode output is the input for the ASR
+            )
+        return asr_input_path
 
     def _get_asset_info(self, file_path):
         # grab the file_name from the path
@@ -144,9 +141,11 @@ class WorkProcessor(object):
         return resp.value
 
     def _get_pid_file_name(self, pid):
+        print(f"ABS PATH OF CURRENT DIR {os.path.abspath('.')}")
         return "{}/{}".format(self.config["PID_CACHE_DIR"], pid)
 
     def _pid_file_exists(self, pid):
+        print(f"ABS PATH OF CURRENT DIR {os.path.abspath('.')}")
         return os.path.exists(self._get_pid_file_name(pid))
 
     def _write_pid_file_json(self, pid: str, json_data: dict):
