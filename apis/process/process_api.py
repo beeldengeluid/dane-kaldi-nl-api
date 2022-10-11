@@ -52,9 +52,9 @@ class ProcessEndpoint(Resource):
         simulate = request.args.get("simulate", "1") == "1"
         if input_file:
             if wait:
-                resp = self._process(pid, input_file, simulate)
+                resp = self._process(current_app.config, pid, input_file, simulate)
             else:
-                resp = self._process_async(pid, input_file, simulate)
+                resp = self._process_async(current_app.config, pid, input_file, simulate)
             return resp, resp["state"], {}
         else:
             return {"state": 400, "message": "error: bad params"}, 400, {}
@@ -67,11 +67,12 @@ class ProcessEndpoint(Resource):
         return resp, resp["state"], {}
 
     # process in a different thread, so the client immediately gets a response and can start polling progress via GET
-    def _process_async(self, pid, input_file, simulate=True):
+    def _process_async(self, config, pid, input_file, simulate=True):
         print("starting ASR in different thread...")
         t = threading.Thread(
             target=self._process,
             args=(
+                config, 
                 pid,
                 input_file,
                 simulate,
@@ -90,23 +91,23 @@ class ProcessEndpoint(Resource):
             "pid": pid,
         }
 
-    def _process(self, pid, input_file, simulate=True, asynchronous=False):
+    def _process(self, config, pid, input_file, simulate=True, asynchronous=False):
         print("running asr (input_file={}) for PID={}".format(input_file, pid))
-        wp = WorkProcessor(current_app.config)
+        wp = WorkProcessor(config)
         if simulate:
             resp = wp.run_simulation(
-                pid, self._to_actual_input_filename(input_file), asynchronous
+                pid, self._to_actual_input_filename(config, input_file), asynchronous
             )
         else:
             resp = wp.process_input_file(
-                pid, self._to_actual_input_filename(input_file), asynchronous
+                pid, self._to_actual_input_filename(config, input_file), asynchronous
             )
         return resp
 
-    def _to_actual_input_filename(self, input_file):
+    def _to_actual_input_filename(self, config, input_file):
         return os.path.join(
-            current_app.config["BASE_FS_MOUNT_DIR"],
-            current_app.config["ASR_INPUT_DIR"],
+            config["BASE_FS_MOUNT_DIR"],
+            config["ASR_INPUT_DIR"],
             requote_uri(
                 input_file
             ),  # use the same quoting function as the DANE.Document.url
