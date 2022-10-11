@@ -10,9 +10,7 @@ RUN apt-get update
 RUN apt-get install -y \
     ffmpeg
 
-# put all python installation in a separate layer for speed
-RUN apt-get install -y \
-    python3 \
+RUN apt-get install -y python3 \
     python3-pip
 
 # add the Python code & install the required libs
@@ -26,17 +24,10 @@ RUN mkdir /src/pid-cache && chmod -R 777 /src/pid-cache
 RUN mkdir /mnt/dane-fs && chmod -R 777 /mnt/dane-fs
 RUN mkdir /mnt/dane-fs/models && chmod -R 777 /mnt/dane-fs/models
 
-COPY pyproject poetry.lock /src/
-
 WORKDIR /src
 
 RUN pip install poetry
-RUN poetry config virtualenvs.create false && poetry install --no-dev --no-interaction --no-ansi
+RUN poetry install
 
-# RUN pip install pipenv
-# RUN pipenv sync --system
-
-# WORKDIR /src
-
-# start the Kaldi API
-ENTRYPOINT ["python", "/src/server.py"]
+# ENTRYPOINT ["tail", "-f", "/dev/null"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
