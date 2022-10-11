@@ -1,11 +1,11 @@
-name: "Pre-Commit"
+name: "Test code base"
 
 on:
   push:
 
 jobs:
   pre-commit:
-    name: "Pre-Commit"
+    name: "test-code-base"
     runs-on: "ubuntu-latest"
 
     steps:
@@ -21,12 +21,10 @@ jobs:
       run: "pip install --user poetry"
 
     - name: "Install dev environment"
-      run: " poetry install --no-interaction --no-ansi"
+      run: "poetry install --no-interaction --no-ansi"
 
     - name: "test"
-      run: |
-        cp config_test.yml config.yml
-        poetry run pytest
+      run: poetry run pytest
 
     - name: "flake8"
       run: "poetry run flake8"
