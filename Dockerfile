@@ -26,14 +26,17 @@ RUN mkdir /src/pid-cache && chmod -R 777 /src/pid-cache
 RUN mkdir /mnt/dane-fs && chmod -R 777 /mnt/dane-fs
 RUN mkdir /mnt/dane-fs/models && chmod -R 777 /mnt/dane-fs/models
 
-COPY Pipfile Pipfile.lock /src/
+COPY pyproject poetry.lock /src/
 
 WORKDIR /src
 
-RUN pip install pipenv
-RUN pipenv sync --system
+RUN pip install poetry
+RUN poetry config virtualenvs.create false && poetry install --no-dev --no-interaction --no-ansi
 
-WORKDIR /src
+# RUN pip install pipenv
+# RUN pipenv sync --system
+
+# WORKDIR /src
 
 # start the Kaldi API
 ENTRYPOINT ["python", "/src/server.py"]

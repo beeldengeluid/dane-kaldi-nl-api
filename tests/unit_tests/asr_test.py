@@ -11,7 +11,8 @@ DUMMY_AUDIO_FILE = f"{DUMMY_INPUT_DIR}/{DUMMY_ASSET_ID}.mp3"
 
 
 @pytest.mark.parametrize(
-    "input_path, asset_id, cmd_success", [
+    "input_path, asset_id, cmd_success",
+    [
         (DUMMY_INPUT_DIR, DUMMY_ASSET_ID, True),
         (DUMMY_INPUT_DIR, DUMMY_ASSET_ID, False),
     ],
@@ -27,6 +28,7 @@ def test_run_asr(application_settings, input_path, asset_id, cmd_success):
         unstub()
 
 
+""" TODO implement
 def test_process_asr_output(application_settings):
     try:
         asr = ASR(application_settings)
@@ -81,3 +83,4 @@ def test_get_words_file_path(application_settings):
         # TODO
     finally:
         unstub()
+"""

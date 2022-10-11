@@ -117,7 +117,9 @@ def test_try_transcode_200(application_settings):
         when(wp.transcoder).transcode_to_mp3(*ARGS).thenReturn(True)
         try:
             resp = wp._try_transcode(DUMMY_FILE_PATH_MP4, "test", ".mp4")
-            assert resp == wp.transcoder.get_transcode_output_path(DUMMY_FILE_PATH_MP4, "test")
+            assert resp == wp.transcoder.get_transcode_output_path(
+                DUMMY_FILE_PATH_MP4, "test"
+            )
         except ValueError as e:
             print(e)
         verify(wp.transcoder, times=1).transcode_to_mp3(*ARGS)

@@ -19,7 +19,6 @@ ASR_TRANSCRIPT_FILE = "1Best.ctm"
 
 
 class ASR(object):
-
     def __init__(self, config):
         self.KALDI_NL_DIR = config["KALDI_NL_DIR"]
         self.KALDI_NL_DECODER = config["KALDI_NL_DECODER"]

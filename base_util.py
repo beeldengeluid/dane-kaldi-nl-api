@@ -78,7 +78,9 @@ def check_language_models(cfg, logger):
 def run_shell_command(cmd: str, logger) -> bool:
     logger.info(cmd)
     try:
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        process = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+        )
         stdout, stderr = process.communicate()
         logger.debug(stdout)
         logger.debug(stderr)
@@ -92,7 +94,9 @@ def run_shell_command(cmd: str, logger) -> bool:
         return False
 
 
-def init_logger(log_dir: str, log_name: str, log_level_console: str, log_level_file: str) -> logging.Logger:
+def init_logger(
+    log_dir: str, log_name: str, log_level_console: str, log_level_file: str
+) -> logging.Logger:
     logger = logging.getLogger(log_name)
     level_file = logging.getLevelName(log_level_file)
     level_console = logging.getLevelName(log_level_console)

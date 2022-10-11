@@ -1,6 +1,7 @@
 import logging
 import os
 import base_util
+from typing import Optional
 
 
 """
@@ -9,7 +10,6 @@ This class supplies the function for transcoding valid video files into mp3 form
 
 
 class Transcoder(object):
-
     def __init__(self, config):
         self.logger = logging.getLogger(config["LOG_NAME"])
 
@@ -18,7 +18,9 @@ class Transcoder(object):
         cmd = "ffmpeg -i {0} {1}".format(path, asr_path)
         return base_util.run_shell_command(cmd, self.logger)
 
-    def get_transcode_output_path(self, input_path: os.PathLike, asset_id: os.PathLike) -> str:
+    def get_transcode_output_path(
+        self, input_path: os.PathLike, asset_id: os.PathLike
+    ) -> Optional[str]:
         try:
             return os.path.join(  # normalise all path elements to strings to avoid "Can't mix strings and bytes in path components"
                 os.sep,

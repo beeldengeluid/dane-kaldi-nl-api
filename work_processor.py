@@ -99,7 +99,9 @@ class WorkProcessor(object):
             if success is False:
                 raise ValueError(APIResponse.TRANSCODE_FAILED.name)
 
-            return transcoding_output_path  # the transcode output is the input for the ASR
+            return (
+                transcoding_output_path  # the transcode output is the input for the ASR
+            )
         return asr_input_path
 
     def _get_asset_info(self, file_path):
