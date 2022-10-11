@@ -139,9 +139,11 @@ class WorkProcessor(object):
         return resp.value
 
     def _get_pid_file_name(self, pid):
+        print(f"ABS PATH OF CURRENT DIR {os.path.abspath('.')}")
         return "{}/{}".format(self.config["PID_CACHE_DIR"], pid)
 
     def _pid_file_exists(self, pid):
+        print(f"ABS PATH OF CURRENT DIR {os.path.abspath('.')}")
         return os.path.exists(self._get_pid_file_name(pid))
 
     def _write_pid_file_json(self, pid: str, json_data: dict):
